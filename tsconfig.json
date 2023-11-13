@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-tooltip-modal": ["./src/index"]
+      "react-native-reanimated-tooltip": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

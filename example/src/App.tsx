@@ -1,18 +1,27 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-tooltip-modal';
+import { StyleSheet, View, Text, Button } from 'react-native';
+import { Tooltip } from 'react-native-reanimated-tooltip';
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+  const [visible, setVisible] = React.useState(false);
 
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Tooltip
+        content={<Text>Hejj</Text>}
+        visible={visible}
+        onPress={() => {
+          setVisible(!visible);
+        }}
+      >
+        <Button
+          title="Toggle tooltip"
+          onPress={() => {
+            setVisible(!visible);
+          }}
+        />
+      </Tooltip>
     </View>
   );
 }

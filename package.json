@@ -1,5 +1,5 @@
 {
-  "name": "react-native-tooltip-modal",
+  "name": "react-native-reanimated-tooltip",
   "version": "0.1.0",
   "description": "Tooltip for React Native using React Native Reanimated and Modal",
   "main": "lib/commonjs/index",
@@ -26,7 +26,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-tooltip-modal-example",
+    "example": "yarn workspace react-native-reanimated-tooltip-example",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -39,13 +39,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/johankasperi/react-native-tooltip-modal",
+  "repository": "https://github.com/johankasperi/react-native-reanimated-tooltip",
   "author": "Johan Kasperi <johan@kasperi.se> (https://github.com/johankasperi)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/johankasperi/react-native-tooltip-modal/issues"
+    "url": "https://github.com/johankasperi/react-native-reanimated-tooltip/issues"
   },
-  "homepage": "https://github.com/johankasperi/react-native-tooltip-modal#readme",
+  "homepage": "https://github.com/johankasperi/react-native-reanimated-tooltip#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -67,6 +67,7 @@
     "react": "18.2.0",
     "react-native": "0.72.6",
     "react-native-builder-bob": "^0.20.0",
+    "react-native-reanimated": "^3.5.4",
     "release-it": "^15.0.0",
     "typescript": "^5.0.2"
   },
@@ -75,7 +76,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-reanimated": "^2.0.0"
   },
   "workspaces": [
     "example"

@@ -1,21 +1,18 @@
-# react-native-tooltip-modal
+# react-native-reanimated-tooltip
 
 Tooltip for React Native using React Native Reanimated and Modal
 
 ## Installation
 
 ```sh
-npm install react-native-tooltip-modal
+npm install react-native-reanimated-tooltip
 ```
 
 ## Usage
 
 ```js
-import { multiply } from 'react-native-tooltip-modal';
+import { Tooltip } from 'react-native-reanimated-tooltip';
 
-// ...
-
-const result = await multiply(3, 7);
 ```
 
 ## Contributing
