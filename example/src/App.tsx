@@ -12,7 +12,10 @@ export default function App() {
       <View>
         <Tooltip
           content={
-            <Text>Hejj asd asd as asd asd sad asd asd asd asd asd asd asd</Text>
+            <Text>
+              Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip
+              Tooltip Tooltip
+            </Text>
           }
           visible={visible}
           onPress={() => {

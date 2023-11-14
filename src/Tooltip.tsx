@@ -168,18 +168,19 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
           <View style={styles.backdrop} ref={backdrop}>
             {visible ? (
               <>
-                <Animated.View style={tooltipPosition} ref={tooltip}>
-                  <Animated.View
-                    style={containerStyle ?? styles.defaultTooltip}
-                    entering={entering}
-                    exiting={exitingWithCallback}
-                  >
-                    {props.content}
+                <Animated.View
+                  entering={entering}
+                  exiting={exitingWithCallback}
+                >
+                  <Animated.View style={tooltipPosition} ref={tooltip}>
+                    <View style={containerStyle ?? styles.defaultTooltip}>
+                      {props.content}
+                    </View>
                   </Animated.View>
                 </Animated.View>
                 {withPointer ? (
-                  <Animated.View style={pointerPosition}>
-                    <Animated.View entering={entering} exiting={exiting}>
+                  <Animated.View entering={entering} exiting={exiting}>
+                    <Animated.View style={pointerPosition}>
                       <Pointer
                         style={[pointerStyle, pointerTransform]}
                         size={pointerSize}
