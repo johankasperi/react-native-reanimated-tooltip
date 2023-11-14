@@ -116,9 +116,11 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     }
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
 
-  const onShow = useCallback(() => {
-    runOnUI(setTooltipPosition)();
-  }, [setTooltipPosition]);
+  const setPositionIfVisible = useCallback(() => {
+    if (visibleState) {
+      runOnUI(setTooltipPosition)();
+    }
+  }, [setTooltipPosition, visibleState]);
 
   const tooltipPosition = useAnimatedStyle(() => {
     return {
@@ -159,9 +161,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   }, [exiting]);
 
   return (
-    <View collapsable={false} ref={element}>
+    <View collapsable={false} ref={element} onLayout={setPositionIfVisible}>
       {props.children}
-      <Modal transparent visible={visibleState} onShow={onShow}>
+      <Modal transparent visible={visibleState} onShow={setPositionIfVisible}>
         <TouchableWithoutFeedback style={styles.backdrop} onPress={onPress}>
           <View style={styles.backdrop} ref={backdrop}>
             {visible ? (
