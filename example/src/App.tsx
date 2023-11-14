@@ -12,10 +12,10 @@ export default function App() {
       <View>
         <Tooltip
           content={
-            <Text>
-              Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip Tooltip
-              Tooltip Tooltip
-            </Text>
+            <>
+              <Text style={styles.tooltipHeadline}>Tooltip</Text>
+              <Text style={styles.tooltipBody}>Body</Text>
+            </>
           }
           visible={visible}
           onPress={() => {
@@ -42,4 +42,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tooltipHeadline: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 24,
+  },
+  tooltipBody: { color: '#84848C', fontSize: 14 },
 });

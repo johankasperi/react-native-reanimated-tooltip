@@ -109,8 +109,12 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       const tooltipOutsideRight =
         tooltipX + tooltipDimensions.width > backdropDimensions.width;
       const tooltipOutsideLeft = tooltipX < 0;
+      const tooltipY =
+        pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
+      // TODO: const tooltipOutsideTop = tooltipY < 0;
+      // TODO: const tooltipOutsideBottom = false
       tooltipLayout.value = {
-        y: pointY + (pointerDown ? -tooltipDimensions.height : pointerSize),
+        y: tooltipY,
         x: tooltipOutsideRight || tooltipOutsideLeft ? 0 : tooltipX,
       };
     }
@@ -202,9 +206,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   defaultTooltip: {
-    backgroundColor: 'lightgrey',
-    padding: 8,
-    borderRadius: 4,
+    backgroundColor: '#F3F2F7',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     marginHorizontal: 8,
   },
 });

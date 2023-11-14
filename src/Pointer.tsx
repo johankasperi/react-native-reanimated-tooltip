@@ -11,7 +11,7 @@ type PointerProps = {
 };
 
 export const Pointer = React.memo(
-  ({ style, size, color = 'lightgrey' }: PointerProps) => {
+  ({ style, size, color = '#F3F2F7' }: PointerProps) => {
     const mergedStyle = useMemo(
       () => [
         styles.pointer,
