@@ -12,6 +12,7 @@ import {
   StyleSheet,
   type StyleProp,
   type ViewStyle,
+  type ColorValue,
 } from 'react-native';
 import Animated, {
   FadeOut,
@@ -33,16 +34,27 @@ export interface TooltipProps {
   content?: React.ReactElement<{}>;
   /** Passes style object to tooltip container */
   containerStyle?: StyleProp<ViewStyle>;
-  /** */
+  /**
+   * Reanimated entering animation
+   * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
+   */
   entering?: typeof BaseAnimationBuilder;
+  /**
+   * Reanimated exiting animation
+   * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
+   */
   exiting?: typeof BaseAnimationBuilder;
 
   /** Flag to determine whether or not to display the pointer. */
   withPointer?: boolean;
   /** Style to be applied on the pointer. */
   pointerStyle?: StyleProp<ViewStyle>;
+  /** Pointer size */
   pointerSize?: number;
+  /** Pointer color */
+  pointerColor?: ColorValue;
 
+  /** Callback when the tooltip and backdrop is pressed. */
   onPress?: () => void;
 }
 
@@ -56,6 +68,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     withPointer = true,
     pointerStyle,
     pointerSize = withPointer ? 8 : 0,
+    pointerColor = styles.defaultTooltip.backgroundColor,
   } = props;
 
   const [visibleState, setVisibleState] = useState(visible);
@@ -148,6 +161,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
 
   const pointerTransform = useAnimatedStyle(
     () => ({
+      marginLeft: -pointerSize,
       transform: [
         {
           rotate: pointerLayout.value.isDown ? '0deg' : '180deg',
@@ -185,10 +199,13 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
                 {withPointer ? (
                   <Animated.View entering={entering} exiting={exiting}>
                     <Animated.View style={pointerPosition}>
-                      <Pointer
-                        style={[pointerStyle, pointerTransform]}
-                        size={pointerSize}
-                      />
+                      <Animated.View style={pointerTransform}>
+                        <Pointer
+                          style={pointerStyle}
+                          size={pointerSize}
+                          color={pointerColor}
+                        />
+                      </Animated.View>
                     </Animated.View>
                   </Animated.View>
                 ) : null}
