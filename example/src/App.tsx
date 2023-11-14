@@ -1,6 +1,7 @@
-import * as React from 'react';
+import React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
+import { FadeOut, FadeIn } from 'react-native-reanimated';
 import { Tooltip } from 'react-native-reanimated-tooltip';
 
 export default function App() {
@@ -8,20 +9,26 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Tooltip
-        content={<Text>Hejj</Text>}
-        visible={visible}
-        onPress={() => {
-          setVisible(!visible);
-        }}
-      >
-        <Button
-          title="Toggle tooltip"
+      <View>
+        <Tooltip
+          content={
+            <Text>Hejj asd asd as asd asd sad asd asd asd asd asd asd asd</Text>
+          }
+          visible={visible}
           onPress={() => {
-            setVisible(!visible);
+            setVisible(false);
           }}
-        />
-      </Tooltip>
+          entering={FadeIn}
+          exiting={FadeOut}
+        >
+          <Button
+            title="Toggle tooltip"
+            onPress={() => {
+              setVisible(true);
+            }}
+          />
+        </Tooltip>
+      </View>
     </View>
   );
 }
@@ -31,10 +38,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });

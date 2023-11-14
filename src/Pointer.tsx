@@ -6,21 +6,21 @@ import Animated from 'react-native-reanimated';
 
 type PointerProps = {
   style?: StyleProp<ViewStyle>;
-  size?: number;
+  size: number;
   color?: string;
 };
 
 export const Pointer = React.memo(
-  ({ style, size = 16, color = 'grey' }: PointerProps) => {
+  ({ style, size, color = 'lightgrey' }: PointerProps) => {
     const mergedStyle = useMemo(
       () => [
         styles.pointer,
         {
-          marginLeft: -Math.round(size / 2),
-          borderLeftWidth: Math.round(size / 2),
-          borderRightWidth: Math.round(size / 2),
-          borderBottomColor: color,
-          borderBottomWidth: 16,
+          marginLeft: -size,
+          borderLeftWidth: size,
+          borderRightWidth: size,
+          borderTopColor: color,
+          borderTopWidth: size,
         },
         style,
       ],
@@ -36,9 +36,6 @@ const styles = StyleSheet.create({
     height: 0,
     backgroundColor: 'transparent',
     borderStyle: 'solid',
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderBottomWidth: 16,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
   },
