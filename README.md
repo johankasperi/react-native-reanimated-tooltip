@@ -2,6 +2,8 @@
 
 Tooltip for React Native using React Native Reanimated and Modal
 
+![Demo 1](./demo/1.gif)
+
 ## Installation
 
 ```sh
@@ -37,6 +39,18 @@ const [visible, setVisible] = React.useState(false);
 </Tooltip>
 
 ```
+
+## Configuration
+
+Check [TooltipProps](https://github.com/johankasperi/react-native-reanimated-tooltip/blob/efd333ae9dea7d1705a8828f2a82ba65338956f2/src/Tooltip.tsx#L29)
+
+## Demo
+
+![Demo 2](./demo/2.gif)
+![Demo 3](./demo/3.gif)
+![Demo 4](./demo/4.gif)
+![Demo 5](./demo/5.gif)
+![Demo 6](./demo/6.gif)
 
 ## Contributing
 
