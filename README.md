@@ -5,7 +5,7 @@ Tooltip for React Native using React Native Reanimated and Modal
 ## Installation
 
 ```sh
-npm install react-native-reanimated react-native-safe-area-context react-native-reanimated-tooltip
+npm install react-native-reanimated react-native-reanimated-tooltip
 ```
 
 ## Usage
