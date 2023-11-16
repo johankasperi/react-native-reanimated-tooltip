@@ -5,13 +5,36 @@ Tooltip for React Native using React Native Reanimated and Modal
 ## Installation
 
 ```sh
-npm install react-native-reanimated-tooltip
+npm install react-native-reanimated react-native-safe-area-context react-native-reanimated-tooltip
 ```
 
 ## Usage
 
-```js
+```ts
+import React from 'react';
+import { Text, Button } from 'react-native';
 import { Tooltip } from 'react-native-reanimated-tooltip';
+import { FadeOut, FadeIn } from 'react-native-reanimated';
+
+const [visible, setVisible] = React.useState(false);
+<Tooltip
+  content={
+    <Text>Tooltip</Text>
+  }
+  visible={visible}
+  onPress={() => {
+    setVisible(false);
+  }}
+  entering={FadeIn}
+  exiting={FadeOut}
+>
+  <Button
+    title="Toggle tooltip"
+    onPress={() => {
+      setVisible(true);
+    }}
+  />
+</Tooltip>
 
 ```
 
