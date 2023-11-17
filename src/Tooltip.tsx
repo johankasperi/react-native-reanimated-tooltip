@@ -124,8 +124,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       const tooltipOutsideLeft = tooltipX < 0;
       const tooltipY =
         pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
-      // TODO: const tooltipOutsideTop = tooltipY < 0;
-      // TODO: const tooltipOutsideBottom = false
       tooltipLayout.value = {
         y: tooltipY,
         x: tooltipOutsideRight || tooltipOutsideLeft ? 0 : tooltipX,
