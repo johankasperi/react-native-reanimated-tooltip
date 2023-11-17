@@ -170,10 +170,13 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   );
 
   const exitingWithCallback = useMemo(() => {
-    return (exiting ?? FadeOut.duration(1)).withCallback(() => {
+    const callback = () => {
       'worklet';
       runOnJS(setVisibleState)(false);
-    });
+    };
+    return exiting
+      ? exiting.withCallback(callback)
+      : FadeOut.duration(1).withCallback(callback);
   }, [exiting]);
 
   return (
