@@ -124,15 +124,22 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
         isDown: pointerDown,
       };
 
-      const tooltipX = pointX - tooltipDimensions.width / 2;
+      let tooltipX = pointX - tooltipDimensions.width / 2;
       const tooltipOutsideRight =
         tooltipX + tooltipDimensions.width > backdropDimensions.width;
+      if (tooltipOutsideRight) {
+        tooltipX = backdropDimensions.width - tooltipDimensions.width;
+      }
+
       const tooltipOutsideLeft = tooltipX < 0;
+      if (tooltipOutsideLeft) {
+        tooltipX = 0;
+      }
       const tooltipY =
         pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
       tooltipLayout.value = {
         y: tooltipY,
-        x: tooltipOutsideRight || tooltipOutsideLeft ? 0 : tooltipX,
+        x: tooltipX,
       };
     }
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
@@ -146,9 +153,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const tooltipPosition = useAnimatedStyle(
     () => ({
       position: 'absolute',
+      opacity: tooltipLayout.value.x === undefined ? 0 : 1,
       top: tooltipLayout.value.y,
-      left: tooltipLayout.value.x ?? 0,
-      right: tooltipLayout.value.x === 0 ? 0 : undefined,
+      left: tooltipLayout.value.x,
     }),
     []
   );
@@ -156,6 +163,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const pointerPosition = useAnimatedStyle(
     () => ({
       position: 'absolute',
+      opacity: pointerLayout.value.x === undefined ? 0 : 1,
       top: pointerLayout.value.y,
       left: pointerLayout.value.x,
     }),
@@ -210,11 +218,11 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
           >
             <View style={styles.backdrop} ref={backdrop}>
               <>
-                <Animated.View style={tooltipPosition} ref={tooltip}>
-                  <Animated.View
-                    entering={entering}
-                    exiting={exitingWithCallback}
-                  >
+                <Animated.View
+                  entering={entering}
+                  exiting={exitingWithCallback}
+                >
+                  <Animated.View style={tooltipPosition} ref={tooltip}>
                     <View style={containerStyle ?? styles.defaultTooltip}>
                       {props.content}
                     </View>
