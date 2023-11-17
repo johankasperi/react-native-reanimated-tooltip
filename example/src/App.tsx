@@ -24,7 +24,7 @@ export default function App() {
             setActiveTooltip(2);
           }}
           entering={FadeIn}
-          exiting={FadeOut.duration(5000)}
+          exiting={FadeOut.duration(1000)}
         >
           <Button
             title="Toggle tooltip"
@@ -34,7 +34,7 @@ export default function App() {
           />
         </Tooltip>
       </View>
-      <View style={{ marginTop: 200, marginLeft: -100 }}>
+      <View style={styles.tooltip2}>
         <Tooltip
           content={
             <>
@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tooltip2: { marginTop: 200, marginLeft: -100 },
   tooltipHeadline: {
     color: '#000',
     fontSize: 18,
