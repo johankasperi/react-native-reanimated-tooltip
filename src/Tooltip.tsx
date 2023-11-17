@@ -1,34 +1,37 @@
 import React, {
   type PropsWithChildren,
   useCallback,
-  useState,
   useEffect,
   useMemo,
+  useState,
 } from 'react';
 import {
-  View,
   Modal,
-  TouchableWithoutFeedback,
   StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+  type ColorValue,
   type StyleProp,
   type ViewStyle,
-  type ColorValue,
 } from 'react-native';
 import Animated, {
   FadeOut,
   measure,
   runOnJS,
   runOnUI,
+  type BaseAnimationBuilder,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
-  type BaseAnimationBuilder,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 
 export interface TooltipProps {
   /** To show the tooltip. */
   visible?: boolean;
+
+  /** Style of the view parent view */
+  style?: StyleProp<ViewStyle>;
 
   /** Component to be rendered as the display container. */
   content?: React.ReactElement<{}>;
@@ -38,12 +41,12 @@ export interface TooltipProps {
    * Reanimated entering animation
    * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
    */
-  entering?: typeof BaseAnimationBuilder;
+  entering?: BaseAnimationBuilder | typeof BaseAnimationBuilder;
   /**
    * Reanimated exiting animation
    * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
    */
-  exiting?: typeof BaseAnimationBuilder;
+  exiting?: BaseAnimationBuilder | typeof BaseAnimationBuilder;
 
   /** Flag to determine whether or not to display the pointer. */
   withPointer?: boolean;
@@ -54,14 +57,14 @@ export interface TooltipProps {
   /** Pointer color */
   pointerColor?: ColorValue;
 
-  /** Callback when the tooltip and backdrop is pressed. */
-  onPress?: () => void;
+  /** Callback when the is closed. */
+  onClose?: () => void;
 }
 
 export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const {
     visible = false,
-    onPress,
+    style,
     containerStyle,
     entering,
     exiting,
@@ -69,14 +72,17 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     pointerStyle,
     pointerSize = withPointer ? 8 : 0,
     pointerColor = styles.defaultTooltip.backgroundColor,
+    onClose,
   } = props;
 
-  const [visibleState, setVisibleState] = useState(visible);
+  const [modalVisible, setModalVisible] = useState(visible);
+  const [contentVisible, setContentVisible] = useState(visible);
 
   useEffect(() => {
     if (visible) {
-      setVisibleState(true);
+      setModalVisible(true);
     }
+    setContentVisible(visible);
   }, [visible]);
 
   const element = useAnimatedRef<View>();
@@ -132,30 +138,29 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
 
   const setPositionIfVisible = useCallback(() => {
-    if (visibleState) {
+    if (contentVisible) {
       runOnUI(setTooltipPosition)();
     }
-  }, [setTooltipPosition, visibleState]);
+  }, [contentVisible, setTooltipPosition]);
 
-  const tooltipPosition = useAnimatedStyle(() => {
-    return {
+  const tooltipPosition = useAnimatedStyle(
+    () => ({
       position: 'absolute',
-      opacity: tooltipLayout.value.x === undefined ? 0 : 1,
       top: tooltipLayout.value.y,
       left: tooltipLayout.value.x ?? 0,
       right: tooltipLayout.value.x === 0 ? 0 : undefined,
-      backgroundColor: 'transparent',
-    };
-  }, []);
+    }),
+    []
+  );
 
-  const pointerPosition = useAnimatedStyle(() => {
-    return {
+  const pointerPosition = useAnimatedStyle(
+    () => ({
       position: 'absolute',
-      opacity: pointerLayout.value.x === undefined ? 0 : 1,
       top: pointerLayout.value.y,
       left: pointerLayout.value.x,
-    };
-  }, []);
+    }),
+    []
+  );
 
   const pointerTransform = useAnimatedStyle(
     () => ({
@@ -169,37 +174,53 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     []
   );
 
+  const onPressCallback = useCallback(() => {
+    setContentVisible(false);
+  }, []);
+
   const exitingWithCallback = useMemo(() => {
-    const callback = () => {
+    const close = () => {
+      onClose && onClose();
+      setModalVisible(false);
+    };
+    const worklet = () => {
       'worklet';
-      runOnJS(setVisibleState)(false);
+      onClose && runOnJS(close)();
     };
     return exiting
-      ? exiting.withCallback(callback)
-      : FadeOut.duration(1).withCallback(callback);
-  }, [exiting]);
+      ? exiting.withCallback(worklet)
+      : FadeOut.duration(1).withCallback(worklet);
+  }, [exiting, onClose]);
 
   return (
-    <View collapsable={false} ref={element} onLayout={setPositionIfVisible}>
+    <View
+      ref={element}
+      collapsable={false}
+      style={style}
+      onLayout={setPositionIfVisible}
+    >
       {props.children}
-      <Modal transparent visible={visibleState} onShow={setPositionIfVisible}>
-        <TouchableWithoutFeedback style={styles.backdrop} onPress={onPress}>
-          <View style={styles.backdrop} ref={backdrop}>
-            {visible ? (
+      <Modal visible={modalVisible} transparent onShow={setPositionIfVisible}>
+        {contentVisible ? (
+          <TouchableWithoutFeedback
+            style={styles.backdrop}
+            onPress={onPressCallback}
+          >
+            <View style={styles.backdrop} ref={backdrop}>
               <>
-                <Animated.View
-                  entering={entering}
-                  exiting={exitingWithCallback}
-                >
-                  <Animated.View style={tooltipPosition} ref={tooltip}>
+                <Animated.View style={tooltipPosition} ref={tooltip}>
+                  <Animated.View
+                    entering={entering}
+                    exiting={exitingWithCallback}
+                  >
                     <View style={containerStyle ?? styles.defaultTooltip}>
                       {props.content}
                     </View>
                   </Animated.View>
                 </Animated.View>
                 {withPointer ? (
-                  <Animated.View entering={entering} exiting={exiting}>
-                    <Animated.View style={pointerPosition}>
+                  <Animated.View style={pointerPosition}>
+                    <Animated.View entering={entering} exiting={exiting}>
                       <Animated.View style={pointerTransform}>
                         <Pointer
                           style={pointerStyle}
@@ -211,9 +232,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
                   </Animated.View>
                 ) : null}
               </>
-            ) : null}
-          </View>
-        </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        ) : null}
       </Modal>
     </View>
   );

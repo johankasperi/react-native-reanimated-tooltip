@@ -1,11 +1,13 @@
 import React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { FadeOut, FadeIn } from 'react-native-reanimated';
+import { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Tooltip } from 'react-native-reanimated-tooltip';
 
 export default function App() {
-  const [visible, setVisible] = React.useState(false);
+  const [activeTooltip, setActiveTooltip] = React.useState<1 | 2 | undefined>(
+    1
+  );
 
   return (
     <View style={styles.container}>
@@ -17,17 +19,40 @@ export default function App() {
               <Text style={styles.tooltipBody}>Body</Text>
             </>
           }
-          visible={visible}
-          onPress={() => {
-            setVisible(false);
+          visible={activeTooltip === 1}
+          onClose={() => {
+            setActiveTooltip(2);
+          }}
+          entering={FadeIn}
+          exiting={FadeOut.duration(1000)}
+        >
+          <Button
+            title="Toggle tooltip"
+            onPress={() => {
+              setActiveTooltip(1);
+            }}
+          />
+        </Tooltip>
+      </View>
+      <View style={{ marginTop: 200, marginLeft: -100 }}>
+        <Tooltip
+          content={
+            <>
+              <Text style={styles.tooltipHeadline}>Tooltip 2</Text>
+              <Text style={styles.tooltipBody}>Body 2</Text>
+            </>
+          }
+          visible={activeTooltip === 2}
+          onClose={() => {
+            setActiveTooltip(undefined);
           }}
           entering={FadeIn}
           exiting={FadeOut}
         >
           <Button
-            title="Toggle tooltip"
+            title="Toggle tooltip 2"
             onPress={() => {
-              setVisible(true);
+              setActiveTooltip(2);
             }}
           />
         </Tooltip>
