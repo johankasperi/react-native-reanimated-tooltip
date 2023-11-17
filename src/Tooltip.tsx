@@ -187,8 +187,10 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       'worklet';
       onClose && runOnJS(close)();
     };
+
     return exiting
-      ? exiting.withCallback(worklet)
+      ? // @ts-ignore For some reason `bob build` throws an error here
+        exiting.withCallback(worklet)
       : FadeOut.duration(1).withCallback(worklet);
   }, [exiting, onClose]);
 
