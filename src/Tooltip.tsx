@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import {
   Modal,
@@ -13,6 +14,7 @@ import {
   type ColorValue,
   type StyleProp,
   type ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   FadeOut,
@@ -141,6 +143,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
         y: tooltipY,
         x: tooltipX,
       };
+      console.log('set position');
     }
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
 
@@ -149,6 +152,17 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       runOnUI(setTooltipPosition)();
     }
   }, [contentVisible, setTooltipPosition]);
+
+  const { fontScale, width } = useWindowDimensions();
+  const prevFontScale = useRef(fontScale);
+  const prevWidth = useRef(width);
+  useEffect(() => {
+    if (prevFontScale.current !== fontScale || prevWidth.current !== width) {
+      prevFontScale.current = fontScale;
+      prevWidth.current = width;
+      setPositionIfVisible();
+    }
+  }, [fontScale, setPositionIfVisible, width]);
 
   const tooltipPosition = useAnimatedStyle(
     () => ({
@@ -203,12 +217,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   }, [exiting, onClose]);
 
   return (
-    <View
-      ref={element}
-      collapsable={false}
-      style={style}
-      onLayout={setPositionIfVisible}
-    >
+    <View ref={element} collapsable={false} style={style}>
       {props.children}
       <Modal visible={modalVisible} transparent onShow={setPositionIfVisible}>
         {contentVisible ? (
