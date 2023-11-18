@@ -143,7 +143,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
         y: tooltipY,
         x: tooltipX,
       };
-      console.log('set position');
     }
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
 
