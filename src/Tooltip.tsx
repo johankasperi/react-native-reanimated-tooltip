@@ -2,14 +2,10 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useMemo,
-  useState,
   useRef,
 } from 'react';
 import {
-  Modal,
   StyleSheet,
-  TouchableWithoutFeedback,
   View,
   type ColorValue,
   type StyleProp,
@@ -17,9 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Animated, {
-  FadeOut,
   measure,
-  runOnJS,
   runOnUI,
   type BaseAnimationBuilder,
   useAnimatedRef,
@@ -27,6 +21,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
+import { ZView } from 'react-native-z-view';
 
 export interface TooltipProps {
   /** To show the tooltip. */
@@ -58,9 +53,6 @@ export interface TooltipProps {
   pointerSize?: number;
   /** Pointer color */
   pointerColor?: ColorValue;
-
-  /** Callback when the is closed. */
-  onClose?: () => void;
 }
 
 export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
@@ -74,18 +66,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     pointerStyle,
     pointerSize = withPointer ? 8 : 0,
     pointerColor = styles.defaultTooltip.backgroundColor,
-    onClose,
   } = props;
-
-  const [modalVisible, setModalVisible] = useState(visible);
-  const [contentVisible, setContentVisible] = useState(visible);
-
-  useEffect(() => {
-    if (visible) {
-      setModalVisible(true);
-    }
-    setContentVisible(visible);
-  }, [visible]);
 
   const element = useAnimatedRef<View>();
   const backdrop = useAnimatedRef<View>();
@@ -143,14 +124,15 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
         y: tooltipY,
         x: tooltipX,
       };
+      console.log('set position');
     }
   }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
 
   const setPositionIfVisible = useCallback(() => {
-    if (contentVisible) {
+    if (visible) {
       runOnUI(setTooltipPosition)();
     }
-  }, [contentVisible, setTooltipPosition]);
+  }, [visible, setTooltipPosition]);
 
   const { fontScale, width } = useWindowDimensions();
   const prevFontScale = useRef(fontScale);
@@ -166,7 +148,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const tooltipPosition = useAnimatedStyle(
     () => ({
       position: 'absolute',
-      opacity: tooltipLayout.value.x === undefined ? 0 : 1,
       top: tooltipLayout.value.y,
       left: tooltipLayout.value.x,
     }),
@@ -176,7 +157,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const pointerPosition = useAnimatedStyle(
     () => ({
       position: 'absolute',
-      opacity: pointerLayout.value.x === undefined ? 0 : 1,
       top: pointerLayout.value.y,
       left: pointerLayout.value.x,
     }),
@@ -195,65 +175,42 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     []
   );
 
-  const onPressCallback = useCallback(() => {
-    setContentVisible(false);
-  }, []);
-
-  const exitingWithCallback = useMemo(() => {
-    const close = () => {
-      onClose && onClose();
-      setModalVisible(false);
-    };
-    const worklet = () => {
-      'worklet';
-      onClose && runOnJS(close)();
-    };
-
-    return exiting
-      ? // @ts-ignore For some reason `bob build` throws an error here
-        exiting.withCallback(worklet)
-      : FadeOut.duration(1).withCallback(worklet);
-  }, [exiting, onClose]);
-
   return (
     <View ref={element} collapsable={false} style={style}>
       {props.children}
-      <Modal visible={modalVisible} transparent onShow={setPositionIfVisible}>
-        {contentVisible ? (
-          <TouchableWithoutFeedback
+      {visible ? (
+        <ZView top={0} right={0} bottom={0} left={0} touchable={false}>
+          <View
             style={styles.backdrop}
-            onPress={onPressCallback}
+            ref={backdrop}
+            pointerEvents="none"
+            onLayout={setPositionIfVisible}
           >
-            <View style={styles.backdrop} ref={backdrop}>
-              <>
-                <Animated.View
-                  entering={entering}
-                  exiting={exitingWithCallback}
-                >
-                  <Animated.View style={tooltipPosition} ref={tooltip}>
-                    <View style={containerStyle ?? styles.defaultTooltip}>
-                      {props.content}
-                    </View>
-                  </Animated.View>
+            <>
+              <Animated.View entering={entering} exiting={exiting}>
+                <Animated.View style={tooltipPosition} ref={tooltip}>
+                  <View style={containerStyle ?? styles.defaultTooltip}>
+                    {props.content}
+                  </View>
                 </Animated.View>
-                {withPointer ? (
+              </Animated.View>
+              {withPointer ? (
+                <Animated.View entering={entering} exiting={exiting}>
                   <Animated.View style={pointerPosition}>
-                    <Animated.View entering={entering} exiting={exiting}>
-                      <Animated.View style={pointerTransform}>
-                        <Pointer
-                          style={pointerStyle}
-                          size={pointerSize}
-                          color={pointerColor}
-                        />
-                      </Animated.View>
+                    <Animated.View style={pointerTransform}>
+                      <Pointer
+                        style={pointerStyle}
+                        size={pointerSize}
+                        color={pointerColor}
+                      />
                     </Animated.View>
                   </Animated.View>
-                ) : null}
-              </>
-            </View>
-          </TouchableWithoutFeedback>
-        ) : null}
-      </Modal>
+                </Animated.View>
+              ) : null}
+            </>
+          </View>
+        </ZView>
+      ) : null}
     </View>
   );
 });

@@ -6,13 +6,14 @@ import { Tooltip } from 'react-native-reanimated-tooltip';
 
 export default function App() {
   const [activeTooltip, setActiveTooltip] = React.useState<1 | 2 | undefined>(
-    1
+    undefined
   );
 
   return (
     <View style={styles.container}>
       <View>
         <Tooltip
+          id={1}
           content={
             <>
               <Text style={styles.tooltipHeadline}>Tooltip</Text>
@@ -20,22 +21,20 @@ export default function App() {
             </>
           }
           visible={activeTooltip === 1}
-          onClose={() => {
-            setActiveTooltip(2);
-          }}
           entering={FadeIn}
           exiting={FadeOut.duration(1000)}
         >
           <Button
             title="Toggle tooltip"
             onPress={() => {
-              setActiveTooltip(1);
+              setActiveTooltip(activeTooltip === 1 ? undefined : 1);
             }}
           />
         </Tooltip>
       </View>
-      <View style={styles.tooltip2}>
+      {/* <View style={styles.tooltip2}>
         <Tooltip
+          id={2}
           content={
             <>
               <Text style={styles.tooltipHeadline}>Tooltip 2</Text>
@@ -56,7 +55,7 @@ export default function App() {
             }}
           />
         </Tooltip>
-      </View>
+      </View> */}
     </View>
   );
 }
@@ -66,6 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   tooltip2: { marginTop: 200, marginLeft: -100 },
   tooltipHeadline: {
