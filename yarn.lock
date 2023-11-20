@@ -14654,15 +14654,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-freeze@npm:^1.0.0":
-  version: 1.0.3
-  resolution: "react-freeze@npm:1.0.3"
-  peerDependencies:
-    react: ">=17.0.0"
-  checksum: 4258eabdbbf74aaebc38ad1fd7cfdc1984d2a844a2247b39a341c55c1beb02d5e855e6473ec5683205a52b2251d0f7dffa07cd8100f402dd2698af88b932d946
-  languageName: node
-  linkType: hard
-
 "react-is@npm:^16.12.0 || ^17.0.0 || ^18.0.0, react-is@npm:^18.0.0":
   version: 18.2.0
   resolution: "react-is@npm:18.2.0"
@@ -14728,7 +14719,6 @@ __metadata:
     react-dom: 18.2.0
     react-native: 0.72.6
     react-native-reanimated: ~3.3.0
-    react-native-screens: ^3.27.0
     react-native-web: ~0.19.6
   languageName: unknown
   linkType: soft
@@ -14756,7 +14746,6 @@ __metadata:
     react-native: 0.72.6
     react-native-builder-bob: ^0.23.1
     react-native-reanimated: ^3.5.4
-    react-native-screens: ^3.27.0
     release-it: ^15.0.0
     typescript: ^5.0.2
   peerDependencies:
@@ -14764,7 +14753,6 @@ __metadata:
     react: "*"
     react-native: "*"
     react-native-reanimated: ^2
-    react-native-screens: ^3
   languageName: unknown
   linkType: soft
 
@@ -14807,19 +14795,6 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 58096b28caef8af261c446eccb91a5a74caa303ba3520b1a2767c5b922b3d19b9a58612ab9b517a959c1b562b2e76e4cf4a8ffb21136960ed63375f6a4c37d1e
-  languageName: node
-  linkType: hard
-
-"react-native-screens@npm:^3.27.0":
-  version: 3.27.0
-  resolution: "react-native-screens@npm:3.27.0"
-  dependencies:
-    react-freeze: ^1.0.0
-    warn-once: ^0.1.0
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 3a6f54bd755ba8c7909beb4888f96d159639221cbcdb56fccd460cd129ff9b144c7c20dc4c0b7eec23aa38698bbd0cf21bb9b6c99833e9d1399ee75da52f18ed
   languageName: node
   linkType: hard
 
@@ -17595,13 +17570,6 @@ __metadata:
   dependencies:
     makeerror: 1.0.12
   checksum: ad7a257ea1e662e57ef2e018f97b3c02a7240ad5093c392186ce0bcf1f1a60bbadd520d073b9beb921ed99f64f065efb63dfc8eec689a80e569f93c1c5d5e16c
-  languageName: node
-  linkType: hard
-
-"warn-once@npm:^0.1.0":
-  version: 0.1.1
-  resolution: "warn-once@npm:0.1.1"
-  checksum: e6a5a1f5a8dba7744399743d3cfb571db4c3947897875d4962a7c5b1bf2195ab4518c838cb4cea652e71729f21bba2e98dc75686f5fccde0fabbd894e2ed0c0d
   languageName: node
   linkType: hard
 
