@@ -1,24 +1,18 @@
-import React, {
-  type PropsWithChildren,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 import {
   StyleSheet,
   View,
   type ColorValue,
   type StyleProp,
   type ViewStyle,
-  useWindowDimensions,
 } from 'react-native';
 import Animated, {
   measure,
-  runOnUI,
   type BaseAnimationBuilder,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
+  useFrameCallback,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 import { Portal } from '@gorhom/portal';
@@ -32,9 +26,6 @@ export interface TooltipProps {
 
   /** Style of the view parent view */
   style?: StyleProp<ViewStyle>;
-
-  /** Passes style object to tooltip container */
-  containerStyle?: StyleProp<ViewStyle>;
 
   /** Passes style object to tooltip */
   tooltipStyle?: StyleProp<ViewStyle>;
@@ -68,7 +59,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     portalHostName,
     visible = false,
     style,
-    containerStyle,
     content,
     tooltipStyle,
     entering,
@@ -99,70 +89,52 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     x: undefined,
   });
 
-  const setTooltipPosition = useCallback(() => {
-    const setPositionWorklet = () => {
-      'worklet';
-      const elementDimensions = measure(element);
-      const backdropDimensions = measure(backdrop);
-      const tooltipDimensions = measure(tooltip);
+  const frameCallback = useFrameCallback(() => {
+    const elementDimensions = measure(element);
+    const backdropDimensions = measure(backdrop);
+    const tooltipDimensions = measure(tooltip);
 
-      if (elementDimensions && backdropDimensions && tooltipDimensions) {
-        const pointerDown =
-          elementDimensions.pageY + elementDimensions.height / 2 >=
-          backdropDimensions.height / 2;
-        const pointX = elementDimensions.pageX + elementDimensions.width / 2;
-        const pointY =
-          elementDimensions.pageY +
-          (pointerDown ? -pointerSize : elementDimensions.height);
-        pointerLayout.value = {
-          x: pointX,
-          y: pointY,
-          isDown: pointerDown,
-        };
+    if (elementDimensions && backdropDimensions && tooltipDimensions) {
+      const pointerDown =
+        elementDimensions.pageY + elementDimensions.height / 2 >=
+        backdropDimensions.height / 2;
+      const pointX = elementDimensions.pageX + elementDimensions.width / 2;
+      const pointY =
+        elementDimensions.pageY +
+        (pointerDown ? -pointerSize : elementDimensions.height);
+      pointerLayout.value = {
+        x: pointX,
+        y: pointY,
+        isDown: pointerDown,
+      };
 
-        let tooltipX = pointX - tooltipDimensions.width / 2;
-        const tooltipOutsideRight =
-          tooltipX + tooltipDimensions.width > backdropDimensions.width;
-        if (tooltipOutsideRight) {
-          tooltipX = backdropDimensions.width - tooltipDimensions.width;
-        }
-
-        const tooltipOutsideLeft = tooltipX < 0;
-        if (tooltipOutsideLeft) {
-          tooltipX = 0;
-        }
-        const tooltipY =
-          pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
-        tooltipLayout.value = {
-          y: tooltipY,
-          x: tooltipX,
-        };
+      let tooltipX = pointX - tooltipDimensions.width / 2;
+      const tooltipOutsideRight =
+        tooltipX + tooltipDimensions.width > backdropDimensions.width;
+      if (tooltipOutsideRight) {
+        tooltipX = backdropDimensions.width - tooltipDimensions.width;
       }
-    };
 
-    if (visible) {
-      runOnUI(setPositionWorklet)();
+      const tooltipOutsideLeft = tooltipX < 0;
+      if (tooltipOutsideLeft) {
+        tooltipX = 0;
+      }
+      const tooltipY =
+        pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
+      tooltipLayout.value = {
+        y: tooltipY,
+        x: tooltipX,
+      };
     }
-  }, [
-    backdrop,
-    element,
-    pointerLayout,
-    pointerSize,
-    tooltip,
-    tooltipLayout,
-    visible,
-  ]);
+  }, false);
 
-  const { fontScale, width } = useWindowDimensions();
-  const prevFontScale = useRef(fontScale);
-  const prevWidth = useRef(width);
   useEffect(() => {
-    if (prevFontScale.current !== fontScale || prevWidth.current !== width) {
-      prevFontScale.current = fontScale;
-      prevWidth.current = width;
-      setTooltipPosition();
+    if (visible) {
+      frameCallback.setActive(true);
+    } else {
+      frameCallback.setActive(false);
     }
-  }, [fontScale, setTooltipPosition, width]);
+  }, [visible, frameCallback]);
 
   const tooltipPosition = useAnimatedStyle(
     () => ({
@@ -201,35 +173,29 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       {children}
       <Portal hostName={portalHostName}>
         {visible ? (
-          <View
-            style={styles.backdrop}
-            ref={backdrop}
-            pointerEvents="none"
-            onLayout={setTooltipPosition}
-          >
-            <Animated.View style={containerStyle}>
-              <Animated.View style={tooltipPosition} ref={tooltip}>
-                <Animated.View entering={entering} exiting={exiting}>
-                  <View style={tooltipStyle ?? styles.defaultTooltip}>
-                    {content}
-                  </View>
-                </Animated.View>
+          <>
+            <View style={styles.backdrop} ref={backdrop} pointerEvents="none" />
+            <Animated.View style={tooltipPosition} ref={tooltip}>
+              <Animated.View entering={entering} exiting={exiting}>
+                <View style={tooltipStyle ?? styles.defaultTooltip}>
+                  {content}
+                </View>
               </Animated.View>
-              {withPointer ? (
+            </Animated.View>
+            {withPointer ? (
+              <Animated.View style={pointerPosition}>
                 <Animated.View entering={entering} exiting={exiting}>
-                  <Animated.View style={pointerPosition}>
-                    <Animated.View style={pointerTransform}>
-                      <Pointer
-                        style={pointerStyle}
-                        size={pointerSize}
-                        color={pointerColor}
-                      />
-                    </Animated.View>
+                  <Animated.View style={pointerTransform}>
+                    <Pointer
+                      style={pointerStyle}
+                      size={pointerSize}
+                      color={pointerColor}
+                    />
                   </Animated.View>
                 </Animated.View>
-              ) : null}
-            </Animated.View>
-          </View>
+              </Animated.View>
+            ) : null}
+          </>
         ) : null}
       </Portal>
     </View>
