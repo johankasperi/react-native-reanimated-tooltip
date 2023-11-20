@@ -2,14 +2,10 @@ import React, {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useMemo,
-  useState,
   useRef,
 } from 'react';
 import {
-  Modal,
   StyleSheet,
-  TouchableWithoutFeedback,
   View,
   type ColorValue,
   type StyleProp,
@@ -17,9 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Animated, {
-  FadeOut,
   measure,
-  runOnJS,
   runOnUI,
   type BaseAnimationBuilder,
   useAnimatedRef,
@@ -27,6 +21,16 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
+import { Portal } from '@gorhom/portal';
+import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { Platform } from 'react-native';
+
+const FullWindowOverlay = ({ children }: PropsWithChildren<{}>) => {
+  if (Platform.OS === 'android') {
+    return <>{children}</>;
+  }
+  return <RNFullWindowOverlay>{children}</RNFullWindowOverlay>;
+};
 
 export interface TooltipProps {
   /** To show the tooltip. */
@@ -58,9 +62,6 @@ export interface TooltipProps {
   pointerSize?: number;
   /** Pointer color */
   pointerColor?: ColorValue;
-
-  /** Callback when the is closed. */
-  onClose?: () => void;
 }
 
 export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
@@ -74,18 +75,8 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     pointerStyle,
     pointerSize = withPointer ? 8 : 0,
     pointerColor = styles.defaultTooltip.backgroundColor,
-    onClose,
+    children,
   } = props;
-
-  const [modalVisible, setModalVisible] = useState(visible);
-  const [contentVisible, setContentVisible] = useState(visible);
-
-  useEffect(() => {
-    if (visible) {
-      setModalVisible(true);
-    }
-    setContentVisible(visible);
-  }, [visible]);
 
   const element = useAnimatedRef<View>();
   const backdrop = useAnimatedRef<View>();
@@ -107,50 +98,58 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   });
 
   const setTooltipPosition = useCallback(() => {
-    'worklet';
-    const elementDimensions = measure(element);
-    const backdropDimensions = measure(backdrop);
-    const tooltipDimensions = measure(tooltip);
+    const setPositionWorklet = () => {
+      'worklet';
+      const elementDimensions = measure(element);
+      const backdropDimensions = measure(backdrop);
+      const tooltipDimensions = measure(tooltip);
 
-    if (elementDimensions && backdropDimensions && tooltipDimensions) {
-      const pointerDown =
-        elementDimensions.pageY + elementDimensions.height / 2 >=
-        backdropDimensions.height / 2;
-      const pointX = elementDimensions.pageX + elementDimensions.width / 2;
-      const pointY =
-        elementDimensions.pageY +
-        (pointerDown ? -pointerSize : elementDimensions.height);
-      pointerLayout.value = {
-        x: pointX,
-        y: pointY,
-        isDown: pointerDown,
-      };
+      if (elementDimensions && backdropDimensions && tooltipDimensions) {
+        const pointerDown =
+          elementDimensions.pageY + elementDimensions.height / 2 >=
+          backdropDimensions.height / 2;
+        const pointX = elementDimensions.pageX + elementDimensions.width / 2;
+        const pointY =
+          elementDimensions.pageY +
+          (pointerDown ? -pointerSize : elementDimensions.height);
+        pointerLayout.value = {
+          x: pointX,
+          y: pointY,
+          isDown: pointerDown,
+        };
 
-      let tooltipX = pointX - tooltipDimensions.width / 2;
-      const tooltipOutsideRight =
-        tooltipX + tooltipDimensions.width > backdropDimensions.width;
-      if (tooltipOutsideRight) {
-        tooltipX = backdropDimensions.width - tooltipDimensions.width;
+        let tooltipX = pointX - tooltipDimensions.width / 2;
+        const tooltipOutsideRight =
+          tooltipX + tooltipDimensions.width > backdropDimensions.width;
+        if (tooltipOutsideRight) {
+          tooltipX = backdropDimensions.width - tooltipDimensions.width;
+        }
+
+        const tooltipOutsideLeft = tooltipX < 0;
+        if (tooltipOutsideLeft) {
+          tooltipX = 0;
+        }
+        const tooltipY =
+          pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
+        tooltipLayout.value = {
+          y: tooltipY,
+          x: tooltipX,
+        };
       }
+    };
 
-      const tooltipOutsideLeft = tooltipX < 0;
-      if (tooltipOutsideLeft) {
-        tooltipX = 0;
-      }
-      const tooltipY =
-        pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
-      tooltipLayout.value = {
-        y: tooltipY,
-        x: tooltipX,
-      };
+    if (visible) {
+      runOnUI(setPositionWorklet)();
     }
-  }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
-
-  const setPositionIfVisible = useCallback(() => {
-    if (contentVisible) {
-      runOnUI(setTooltipPosition)();
-    }
-  }, [contentVisible, setTooltipPosition]);
+  }, [
+    backdrop,
+    element,
+    pointerLayout,
+    pointerSize,
+    tooltip,
+    tooltipLayout,
+    visible,
+  ]);
 
   const { fontScale, width } = useWindowDimensions();
   const prevFontScale = useRef(fontScale);
@@ -159,9 +158,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     if (prevFontScale.current !== fontScale || prevWidth.current !== width) {
       prevFontScale.current = fontScale;
       prevWidth.current = width;
-      setPositionIfVisible();
+      setTooltipPosition();
     }
-  }, [fontScale, setPositionIfVisible, width]);
+  }, [fontScale, setTooltipPosition, width]);
 
   const tooltipPosition = useAnimatedStyle(
     () => ({
@@ -195,72 +194,58 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     []
   );
 
-  const onPressCallback = useCallback(() => {
-    setContentVisible(false);
-  }, []);
-
-  const exitingWithCallback = useMemo(() => {
-    const close = () => {
-      onClose && onClose();
-      setModalVisible(false);
-    };
-    const worklet = () => {
-      'worklet';
-      onClose && runOnJS(close)();
-    };
-
-    return exiting
-      ? // @ts-ignore For some reason `bob build` throws an error here
-        exiting.withCallback(worklet)
-      : FadeOut.duration(1).withCallback(worklet);
-  }, [exiting, onClose]);
-
   return (
-    <View ref={element} collapsable={false} style={style}>
-      {props.children}
-      <Modal visible={modalVisible} transparent onShow={setPositionIfVisible}>
-        {contentVisible ? (
-          <TouchableWithoutFeedback
-            style={styles.backdrop}
-            onPress={onPressCallback}
-          >
-            <View style={styles.backdrop} ref={backdrop}>
-              <>
-                <Animated.View
-                  entering={entering}
-                  exiting={exitingWithCallback}
-                >
-                  <Animated.View style={tooltipPosition} ref={tooltip}>
-                    <View style={containerStyle ?? styles.defaultTooltip}>
-                      {props.content}
-                    </View>
-                  </Animated.View>
+    <View
+      ref={element}
+      collapsable={false}
+      style={style}
+      onLayout={setTooltipPosition}
+    >
+      {children}
+      <Portal>
+        <FullWindowOverlay>
+          {visible ? (
+            <View
+              style={styles.backdrop}
+              ref={backdrop}
+              pointerEvents="none"
+              onLayout={setTooltipPosition}
+            >
+              <Animated.View style={tooltipPosition} ref={tooltip}>
+                <Animated.View entering={entering} exiting={exiting}>
+                  <View style={containerStyle ?? styles.defaultTooltip}>
+                    {props.content}
+                  </View>
                 </Animated.View>
-                {withPointer ? (
+              </Animated.View>
+              {withPointer ? (
+                <Animated.View entering={entering} exiting={exiting}>
                   <Animated.View style={pointerPosition}>
-                    <Animated.View entering={entering} exiting={exiting}>
-                      <Animated.View style={pointerTransform}>
-                        <Pointer
-                          style={pointerStyle}
-                          size={pointerSize}
-                          color={pointerColor}
-                        />
-                      </Animated.View>
+                    <Animated.View style={pointerTransform}>
+                      <Pointer
+                        style={pointerStyle}
+                        size={pointerSize}
+                        color={pointerColor}
+                      />
                     </Animated.View>
                   </Animated.View>
-                ) : null}
-              </>
+                </Animated.View>
+              ) : null}
             </View>
-          </TouchableWithoutFeedback>
-        ) : null}
-      </Modal>
+          ) : null}
+        </FullWindowOverlay>
+      </Portal>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
   backdrop: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
   },
   defaultTooltip: {
     backgroundColor: '#F3F2F7',
