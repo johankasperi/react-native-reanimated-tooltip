@@ -22,27 +22,26 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 import { Portal } from '@gorhom/portal';
-import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
-import { Platform } from 'react-native';
-
-const FullWindowOverlay = ({ children }: PropsWithChildren<{}>) => {
-  if (Platform.OS === 'android') {
-    return <>{children}</>;
-  }
-  return <RNFullWindowOverlay>{children}</RNFullWindowOverlay>;
-};
+import type { PortalProps } from '@gorhom/portal/lib/typescript/components/portal/types';
 
 export interface TooltipProps {
+  portalHostName?: PortalProps['hostName'];
+
   /** To show the tooltip. */
   visible?: boolean;
 
   /** Style of the view parent view */
   style?: StyleProp<ViewStyle>;
 
-  /** Component to be rendered as the display container. */
-  content?: React.ReactElement<{}>;
   /** Passes style object to tooltip container */
   containerStyle?: StyleProp<ViewStyle>;
+
+  /** Passes style object to tooltip */
+  tooltipStyle?: StyleProp<ViewStyle>;
+
+  /** Component to be rendered as the display container. */
+  content?: React.ReactElement<{}>;
+
   /**
    * Reanimated entering animation
    * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
@@ -66,9 +65,12 @@ export interface TooltipProps {
 
 export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const {
+    portalHostName,
     visible = false,
     style,
     containerStyle,
+    content,
+    tooltipStyle,
     entering,
     exiting,
     withPointer = true,
@@ -195,26 +197,21 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   );
 
   return (
-    <View
-      ref={element}
-      collapsable={false}
-      style={style}
-      onLayout={setTooltipPosition}
-    >
+    <View ref={element} collapsable={false} style={style}>
       {children}
-      <Portal>
-        <FullWindowOverlay>
-          {visible ? (
-            <View
-              style={styles.backdrop}
-              ref={backdrop}
-              pointerEvents="none"
-              onLayout={setTooltipPosition}
-            >
+      <Portal hostName={portalHostName}>
+        {visible ? (
+          <View
+            style={styles.backdrop}
+            ref={backdrop}
+            pointerEvents="none"
+            onLayout={setTooltipPosition}
+          >
+            <Animated.View style={containerStyle}>
               <Animated.View style={tooltipPosition} ref={tooltip}>
                 <Animated.View entering={entering} exiting={exiting}>
-                  <View style={containerStyle ?? styles.defaultTooltip}>
-                    {props.content}
+                  <View style={tooltipStyle ?? styles.defaultTooltip}>
+                    {content}
                   </View>
                 </Animated.View>
               </Animated.View>
@@ -231,9 +228,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
                   </Animated.View>
                 </Animated.View>
               ) : null}
-            </View>
-          ) : null}
-        </FullWindowOverlay>
+            </Animated.View>
+          </View>
+        ) : null}
       </Portal>
     </View>
   );
