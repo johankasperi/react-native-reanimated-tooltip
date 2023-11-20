@@ -2,55 +2,50 @@
 
 Tooltip for React Native using React Native Reanimated and Modal
 
-![Demo 1](./demo/1.gif)
+![Demo 1](./demo.gif)
 
 ## Installation
 
 ```sh
-npm install react-native-reanimated react-native-reanimated-tooltip
+npm install react-native-reanimated react-native-screens @gorhom/portal react-native-reanimated-tooltip
 ```
 
 ## Usage
 
 ```ts
+import { PortalProvider } from '@gorhom/portal';
 import React from 'react';
 import { Text, Button } from 'react-native';
 import { Tooltip } from 'react-native-reanimated-tooltip';
 import { FadeOut, FadeIn } from 'react-native-reanimated';
 
 const [visible, setVisible] = React.useState(false);
-<Tooltip
-  content={
-    <Text>Tooltip</Text>
-  }
-  visible={visible}
-  onPress={() => {
-    setVisible(false);
-  }}
-  entering={FadeIn}
-  exiting={FadeOut}
->
-  <Button
-    title="Toggle tooltip"
+<PortalProvider>
+  <Tooltip
+    content={
+      <Text>Tooltip</Text>
+    }
+    visible={visible}
     onPress={() => {
-      setVisible(true);
+      setVisible(false);
     }}
-  />
-</Tooltip>
+    entering={FadeIn}
+    exiting={FadeOut}
+  >
+    <Button
+      title="Toggle tooltip"
+      onPress={() => {
+        setVisible(true);
+      }}
+    />
+  </Tooltip>
+</PortalProvider>
 
 ```
 
 ## Configuration
 
 Check [TooltipProps](https://github.com/johankasperi/react-native-reanimated-tooltip/blob/efd333ae9dea7d1705a8828f2a82ba65338956f2/src/Tooltip.tsx#L29)
-
-## Demo
-
-![Demo 2](./demo/2.gif)
-![Demo 3](./demo/3.gif)
-![Demo 4](./demo/4.gif)
-![Demo 5](./demo/5.gif)
-![Demo 6](./demo/6.gif)
 
 ## Contributing
 
