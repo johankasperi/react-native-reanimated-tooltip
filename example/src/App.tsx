@@ -22,7 +22,7 @@ export default function App() {
             }
             visible={tooltip1Active}
             entering={FadeIn}
-            exiting={FadeOut.duration(1000)}
+            exiting={FadeOut}
           >
             <Button
               title="Toggle tooltip"
