@@ -1,44 +1,43 @@
-import React, {
-  type PropsWithChildren,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from 'react';
+import React, { type PropsWithChildren, useCallback } from 'react';
 import {
-  Modal,
   StyleSheet,
-  TouchableWithoutFeedback,
   View,
   type ColorValue,
   type StyleProp,
   type ViewStyle,
-  useWindowDimensions,
 } from 'react-native';
 import Animated, {
-  FadeOut,
   measure,
-  runOnJS,
-  runOnUI,
   type BaseAnimationBuilder,
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
+  runOnUI,
+  useDerivedValue,
 } from 'react-native-reanimated';
+import { Portal } from '@gorhom/portal';
+import type { PortalProps } from '@gorhom/portal/lib/typescript/components/portal/types';
+import type { MeasuredDimensions } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 
 export interface TooltipProps {
+  portalHostName?: PortalProps['hostName'];
+
   /** To show the tooltip. */
   visible?: boolean;
 
-  /** Style of the view parent view */
+  /** Style parent view wrapping your element */
   style?: StyleProp<ViewStyle>;
+
+  /** Style of view wrapping the tooltip */
+  containerStyle?: StyleProp<ViewStyle>;
+
+  /** Style of the tooltip */
+  tooltipStyle?: StyleProp<ViewStyle>;
 
   /** Component to be rendered as the display container. */
   content?: React.ReactElement<{}>;
-  /** Passes style object to tooltip container */
-  containerStyle?: StyleProp<ViewStyle>;
+
   /**
    * Reanimated entering animation
    * https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/
@@ -58,209 +57,204 @@ export interface TooltipProps {
   pointerSize?: number;
   /** Pointer color */
   pointerColor?: ColorValue;
-
-  /** Callback when the is closed. */
-  onClose?: () => void;
 }
 
 export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const {
+    portalHostName,
     visible = false,
     style,
     containerStyle,
+    content,
+    tooltipStyle,
     entering,
     exiting,
     withPointer = true,
     pointerStyle,
     pointerSize = withPointer ? 8 : 0,
     pointerColor = styles.defaultTooltip.backgroundColor,
-    onClose,
+    children,
   } = props;
-
-  const [modalVisible, setModalVisible] = useState(visible);
-  const [contentVisible, setContentVisible] = useState(visible);
-
-  useEffect(() => {
-    if (visible) {
-      setModalVisible(true);
-    }
-    setContentVisible(visible);
-  }, [visible]);
 
   const element = useAnimatedRef<View>();
   const backdrop = useAnimatedRef<View>();
   const tooltip = useAnimatedRef<Animated.View>();
 
-  const pointerLayout = useSharedValue<{
-    x?: number;
-    y?: number;
-    isDown?: boolean;
-  }>({
-    x: undefined,
-    y: undefined,
-    isDown: undefined,
+  const elementDimensions = useSharedValue<MeasuredDimensions | null>(null);
+  const backdropDimensions = useSharedValue<MeasuredDimensions | null>(null);
+  const tooltipDimensions = useSharedValue<MeasuredDimensions | null>(null);
+
+  const pointPosition = useDerivedValue<
+    | {
+        x: number;
+        y: number;
+        topHalfOfViewport: boolean;
+      }
+    | undefined
+  >(() => {
+    if (elementDimensions.value && backdropDimensions.value) {
+      const topHalfOfViewport =
+        elementDimensions.value.pageY + elementDimensions.value.height / 2 >=
+        backdropDimensions.value.height / 2;
+      const x =
+        elementDimensions.value.pageX + elementDimensions.value.width / 2;
+      const y =
+        elementDimensions.value.pageY +
+        (topHalfOfViewport ? -pointerSize : elementDimensions.value.height);
+
+      return { x, y, topHalfOfViewport };
+    }
+    return undefined;
   });
 
-  const tooltipLayout = useSharedValue<{ x?: number; y?: number }>({
-    y: undefined,
-    x: undefined,
-  });
+  const onElementLayout = useCallback(() => {
+    const measureWorklet = () => {
+      'worklet';
+      elementDimensions.value = measure(element);
+    };
+    runOnUI(measureWorklet)();
+  }, [element, elementDimensions]);
 
-  const setTooltipPosition = useCallback(() => {
-    'worklet';
-    const elementDimensions = measure(element);
-    const backdropDimensions = measure(backdrop);
-    const tooltipDimensions = measure(tooltip);
+  const onBackdropLayout = useCallback(() => {
+    const measureWorklet = () => {
+      'worklet';
+      backdropDimensions.value = measure(backdrop);
+    };
+    runOnUI(measureWorklet)();
+  }, [backdrop, backdropDimensions]);
 
-    if (elementDimensions && backdropDimensions && tooltipDimensions) {
-      const pointerDown =
-        elementDimensions.pageY + elementDimensions.height / 2 >=
-        backdropDimensions.height / 2;
-      const pointX = elementDimensions.pageX + elementDimensions.width / 2;
-      const pointY =
-        elementDimensions.pageY +
-        (pointerDown ? -pointerSize : elementDimensions.height);
-      pointerLayout.value = {
-        x: pointX,
-        y: pointY,
-        isDown: pointerDown,
+  const onTooltipLayout = useCallback(() => {
+    const measureWorklet = () => {
+      'worklet';
+      tooltipDimensions.value = measure(tooltip);
+    };
+    runOnUI(measureWorklet)();
+  }, [tooltip, tooltipDimensions]);
+
+  const containerAnimatedStyle = useAnimatedStyle(() => {
+    if (pointPosition.value) {
+      return {
+        position: 'absolute',
+        top: pointPosition.value.y,
+        left: 0,
+        right: 0,
+        backgroundColor: 'transparent',
       };
+    }
+    return {
+      position: 'absolute',
+      top: -10000,
+      left: 0,
+      right: 0,
+    };
+  });
 
-      let tooltipX = pointX - tooltipDimensions.width / 2;
+  const tooltipAnimatedStyle = useAnimatedStyle(() => {
+    if (
+      backdropDimensions.value &&
+      tooltipDimensions.value &&
+      pointPosition.value
+    ) {
+      let tooltipX = pointPosition.value.x - tooltipDimensions.value.width / 2;
       const tooltipOutsideRight =
-        tooltipX + tooltipDimensions.width > backdropDimensions.width;
+        tooltipX + tooltipDimensions.value.width >
+        backdropDimensions.value.width;
       if (tooltipOutsideRight) {
-        tooltipX = backdropDimensions.width - tooltipDimensions.width;
+        tooltipX =
+          backdropDimensions.value.width - tooltipDimensions.value.width;
       }
 
       const tooltipOutsideLeft = tooltipX < 0;
       if (tooltipOutsideLeft) {
         tooltipX = 0;
       }
-      const tooltipY =
-        pointY + (pointerDown ? -tooltipDimensions.height : pointerSize);
-      tooltipLayout.value = {
-        y: tooltipY,
-        x: tooltipX,
+      return {
+        position: 'absolute',
+        top: pointPosition.value.topHalfOfViewport
+          ? -tooltipDimensions.value.height
+          : pointerSize,
+        left: tooltipX,
       };
     }
-  }, [backdrop, element, pointerLayout, pointerSize, tooltip, tooltipLayout]);
-
-  const setPositionIfVisible = useCallback(() => {
-    if (contentVisible) {
-      runOnUI(setTooltipPosition)();
-    }
-  }, [contentVisible, setTooltipPosition]);
-
-  const { fontScale, width } = useWindowDimensions();
-  const prevFontScale = useRef(fontScale);
-  const prevWidth = useRef(width);
-  useEffect(() => {
-    if (prevFontScale.current !== fontScale || prevWidth.current !== width) {
-      prevFontScale.current = fontScale;
-      prevWidth.current = width;
-      setPositionIfVisible();
-    }
-  }, [fontScale, setPositionIfVisible, width]);
-
-  const tooltipPosition = useAnimatedStyle(
-    () => ({
+    return {
       position: 'absolute',
-      opacity: tooltipLayout.value.x === undefined ? 0 : 1,
-      top: tooltipLayout.value.y,
-      left: tooltipLayout.value.x,
-    }),
-    []
-  );
-
-  const pointerPosition = useAnimatedStyle(
-    () => ({
-      position: 'absolute',
-      opacity: pointerLayout.value.x === undefined ? 0 : 1,
-      top: pointerLayout.value.y,
-      left: pointerLayout.value.x,
-    }),
-    []
-  );
-
-  const pointerTransform = useAnimatedStyle(
-    () => ({
-      marginLeft: -pointerSize,
-      transform: [
-        {
-          rotate: pointerLayout.value.isDown ? '0deg' : '180deg',
-        },
-      ],
-    }),
-    []
-  );
-
-  const onPressCallback = useCallback(() => {
-    setContentVisible(false);
+      top: -10000,
+    };
   }, []);
 
-  const exitingWithCallback = useMemo(() => {
-    const close = () => {
-      onClose && onClose();
-      setModalVisible(false);
+  const pointerAnimatedStyle = useAnimatedStyle(() => {
+    if (pointPosition.value) {
+      return {
+        position: 'absolute',
+        top: 0,
+        left: pointPosition.value.x,
+        marginLeft: -pointerSize,
+        transform: [
+          {
+            rotate: pointPosition.value.topHalfOfViewport ? '0deg' : '180deg',
+          },
+        ],
+      };
+    }
+    return {
+      position: 'absolute',
+      top: -10000,
     };
-    const worklet = () => {
-      'worklet';
-      onClose && runOnJS(close)();
-    };
-
-    return exiting
-      ? // @ts-ignore For some reason `bob build` throws an error here
-        exiting.withCallback(worklet)
-      : FadeOut.duration(1).withCallback(worklet);
-  }, [exiting, onClose]);
+  }, []);
 
   return (
-    <View ref={element} collapsable={false} style={style}>
-      {props.children}
-      <Modal visible={modalVisible} transparent onShow={setPositionIfVisible}>
-        {contentVisible ? (
-          <TouchableWithoutFeedback
-            style={styles.backdrop}
-            onPress={onPressCallback}
-          >
-            <View style={styles.backdrop} ref={backdrop}>
-              <>
+    <View
+      ref={element}
+      collapsable={false}
+      style={style}
+      onLayout={onElementLayout}
+    >
+      {children}
+      <Portal hostName={portalHostName}>
+        {visible ? (
+          <>
+            <View
+              style={styles.backdrop}
+              ref={backdrop}
+              pointerEvents="none"
+              onLayout={onBackdropLayout}
+            />
+            <Animated.View style={[containerAnimatedStyle, containerStyle]}>
+              <Animated.View entering={entering} exiting={exiting}>
                 <Animated.View
-                  entering={entering}
-                  exiting={exitingWithCallback}
+                  style={tooltipAnimatedStyle}
+                  ref={tooltip}
+                  onLayout={onTooltipLayout}
                 >
-                  <Animated.View style={tooltipPosition} ref={tooltip}>
-                    <View style={containerStyle ?? styles.defaultTooltip}>
-                      {props.content}
-                    </View>
-                  </Animated.View>
+                  <View style={tooltipStyle ?? styles.defaultTooltip}>
+                    {content}
+                  </View>
                 </Animated.View>
                 {withPointer ? (
-                  <Animated.View style={pointerPosition}>
-                    <Animated.View entering={entering} exiting={exiting}>
-                      <Animated.View style={pointerTransform}>
-                        <Pointer
-                          style={pointerStyle}
-                          size={pointerSize}
-                          color={pointerColor}
-                        />
-                      </Animated.View>
-                    </Animated.View>
+                  <Animated.View style={pointerAnimatedStyle}>
+                    <Pointer
+                      style={pointerStyle}
+                      size={pointerSize}
+                      color={pointerColor}
+                    />
                   </Animated.View>
                 ) : null}
-              </>
-            </View>
-          </TouchableWithoutFeedback>
+              </Animated.View>
+            </Animated.View>
+          </>
         ) : null}
-      </Modal>
+      </Portal>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
   backdrop: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
   },
   defaultTooltip: {
     backgroundColor: '#F3F2F7',
