@@ -80,15 +80,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const backdrop = useAnimatedRef<View>();
   const tooltip = useAnimatedRef<Animated.View>();
 
-  const elementDimensions = useSharedValue<MeasuredDimensions | undefined>(
-    undefined
-  );
-  const backdropDimensions = useSharedValue<MeasuredDimensions | undefined>(
-    undefined
-  );
-  const tooltipDimensions = useSharedValue<MeasuredDimensions | undefined>(
-    undefined
-  );
+  const elementDimensions = useSharedValue<MeasuredDimensions | null>(null);
+  const backdropDimensions = useSharedValue<MeasuredDimensions | null>(null);
+  const tooltipDimensions = useSharedValue<MeasuredDimensions | null>(null);
 
   const pointPosition = useDerivedValue<
     | {
