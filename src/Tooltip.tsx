@@ -5,6 +5,7 @@ import {
   type ColorValue,
   type StyleProp,
   type ViewStyle,
+  type ViewProps,
 } from 'react-native';
 import Animated, {
   measure,
@@ -19,15 +20,13 @@ import { Portal } from '@gorhom/portal';
 import type { PortalProps } from '@gorhom/portal/lib/typescript/components/portal/types';
 import type { MeasuredDimensions } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
+import type { LayoutChangeEvent } from 'react-native';
 
-export interface TooltipProps {
+export interface TooltipProps extends ViewProps {
   portalHostName?: PortalProps['hostName'];
 
   /** To show the tooltip. */
   visible?: boolean;
-
-  /** Style parent view wrapping your element */
-  style?: StyleProp<ViewStyle>;
 
   /** Style of view wrapping the tooltip */
   containerStyle?: StyleProp<ViewStyle>;
@@ -63,7 +62,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const {
     portalHostName,
     visible = false,
-    style,
     containerStyle,
     content,
     tooltipStyle,
@@ -74,6 +72,8 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     pointerSize = withPointer ? 8 : 0,
     pointerColor = styles.defaultTooltip.backgroundColor,
     children,
+    onLayout,
+    ...rest
   } = props;
 
   const element = useAnimatedRef<View>();
@@ -107,13 +107,17 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     return undefined;
   });
 
-  const onElementLayout = useCallback(() => {
-    const measureWorklet = () => {
-      'worklet';
-      elementDimensions.value = measure(element);
-    };
-    runOnUI(measureWorklet)();
-  }, [element, elementDimensions]);
+  const onElementLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      onLayout?.(event);
+      const measureWorklet = () => {
+        'worklet';
+        elementDimensions.value = measure(element);
+      };
+      runOnUI(measureWorklet)();
+    },
+    [element, elementDimensions, onLayout]
+  );
 
   const onBackdropLayout = useCallback(() => {
     const measureWorklet = () => {
@@ -204,9 +208,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
 
   return (
     <View
+      {...rest}
       ref={element}
       collapsable={false}
-      style={style}
       onLayout={onElementLayout}
     >
       {children}
