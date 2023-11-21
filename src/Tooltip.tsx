@@ -94,21 +94,21 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     | {
         x: number;
         y: number;
-        isDown: boolean;
+        topHalfOfViewport: boolean;
       }
     | undefined
   >(() => {
     if (elementDimensions.value && backdropDimensions.value) {
-      const isDown =
+      const topHalfOfViewport =
         elementDimensions.value.pageY + elementDimensions.value.height / 2 >=
         backdropDimensions.value.height / 2;
       const x =
         elementDimensions.value.pageX + elementDimensions.value.width / 2;
       const y =
         elementDimensions.value.pageY +
-        (isDown ? -pointerSize : elementDimensions.value.height);
+        (topHalfOfViewport ? -pointerSize : elementDimensions.value.height);
 
-      return { x, y, isDown };
+      return { x, y, topHalfOfViewport };
     }
     return undefined;
   });
@@ -176,7 +176,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       }
       return {
         position: 'absolute',
-        top: pointPosition.value.isDown
+        top: pointPosition.value.topHalfOfViewport
           ? -tooltipDimensions.value.height
           : pointerSize,
         left: tooltipX,
@@ -197,7 +197,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
         marginLeft: -pointerSize,
         transform: [
           {
-            rotate: pointPosition.value.isDown ? '0deg' : '180deg',
+            rotate: pointPosition.value.topHalfOfViewport ? '0deg' : '180deg',
           },
         ],
       };
