@@ -219,7 +219,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
               pointerEvents="none"
               onLayout={onBackdropLayout}
             />
-            <Animated.View style={[containerAnimatedStyle, containerStyle]}>
+            <Animated.View style={[containerStyle, containerAnimatedStyle]}>
               <Animated.View entering={entering} exiting={exiting}>
                 <Animated.View
                   style={tooltipAnimatedStyle}
