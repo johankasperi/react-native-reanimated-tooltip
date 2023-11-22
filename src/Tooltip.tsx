@@ -6,6 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
   type ViewProps,
+  type LayoutChangeEvent,
 } from 'react-native';
 import Animated, {
   type BaseAnimationBuilder,
@@ -14,13 +15,10 @@ import Animated, {
   useDerivedValue,
 } from 'react-native-reanimated';
 import { Portal } from '@gorhom/portal';
-import type { PortalProps } from '@gorhom/portal/lib/typescript/components/portal/types';
-import type { MeasuredDimensions } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
-import type { LayoutChangeEvent } from 'react-native';
 
 export interface TooltipProps extends ViewProps {
-  portalHostName?: PortalProps['hostName'];
+  portalHostName?: string;
 
   /** To show the tooltip. */
   visible?: boolean;
@@ -77,9 +75,20 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const backdrop = useRef<View>(null);
   const tooltip = useRef<Animated.View>(null);
 
-  const elementDimensions = useSharedValue<MeasuredDimensions | null>(null);
-  const backdropDimensions = useSharedValue<MeasuredDimensions | null>(null);
-  const tooltipDimensions = useSharedValue<MeasuredDimensions | null>(null);
+  const elementDimensions = useSharedValue<{
+    pageX: number;
+    pageY: number;
+    height: number;
+    width: number;
+  } | null>(null);
+  const backdropDimensions = useSharedValue<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const tooltipDimensions = useSharedValue<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   const pointPosition = useDerivedValue<
     | {
@@ -107,10 +116,8 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const onElementLayout = useCallback(
     (event: LayoutChangeEvent) => {
       onLayout?.(event);
-      element.current?.measure((x, y, width, height, pageX, pageY) => {
+      element.current?.measure((_x, _y, width, height, pageX, pageY) => {
         elementDimensions.value = {
-          x,
-          y,
           width,
           height,
           pageX,
@@ -121,31 +128,27 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     [element, elementDimensions, onLayout]
   );
 
-  const onBackdropLayout = useCallback(() => {
-    backdrop.current?.measure((x, y, width, height, pageX, pageY) => {
+  const onBackdropLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { width, height } = event.nativeEvent.layout;
       backdropDimensions.value = {
-        x,
-        y,
         width,
         height,
-        pageX,
-        pageY,
       };
-    });
-  }, [backdrop, backdropDimensions]);
+    },
+    [backdropDimensions]
+  );
 
-  const onTooltipLayout = useCallback(() => {
-    tooltip.current?.measure((x, y, width, height, pageX, pageY) => {
+  const onTooltipLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { width, height } = event.nativeEvent.layout;
       tooltipDimensions.value = {
-        x,
-        y,
         width,
         height,
-        pageX,
-        pageY,
       };
-    });
-  }, [tooltip, tooltipDimensions]);
+    },
+    [tooltipDimensions]
+  );
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     if (pointPosition.value) {
@@ -171,6 +174,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       tooltipDimensions.value &&
       pointPosition.value
     ) {
+      console.log({ tooltipDimensions: tooltipDimensions.value });
       let tooltipX = pointPosition.value.x - tooltipDimensions.value.width / 2;
       const tooltipOutsideRight =
         tooltipX + tooltipDimensions.value.width >
