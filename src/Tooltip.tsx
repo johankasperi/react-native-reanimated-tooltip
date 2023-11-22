@@ -1,4 +1,4 @@
-import React, { type PropsWithChildren, useCallback } from 'react';
+import React, { type PropsWithChildren, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,12 +8,9 @@ import {
   type ViewProps,
 } from 'react-native';
 import Animated, {
-  measure,
   type BaseAnimationBuilder,
-  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
-  runOnUI,
   useDerivedValue,
 } from 'react-native-reanimated';
 import { Portal } from '@gorhom/portal';
@@ -76,9 +73,9 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     ...rest
   } = props;
 
-  const element = useAnimatedRef<View>();
-  const backdrop = useAnimatedRef<View>();
-  const tooltip = useAnimatedRef<Animated.View>();
+  const element = useRef<View>(null);
+  const backdrop = useRef<View>(null);
+  const tooltip = useRef<Animated.View>(null);
 
   const elementDimensions = useSharedValue<MeasuredDimensions | null>(null);
   const backdropDimensions = useSharedValue<MeasuredDimensions | null>(null);
@@ -110,29 +107,44 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const onElementLayout = useCallback(
     (event: LayoutChangeEvent) => {
       onLayout?.(event);
-      const measureWorklet = () => {
-        'worklet';
-        elementDimensions.value = measure(element);
-      };
-      runOnUI(measureWorklet)();
+      element.current?.measure((x, y, width, height, pageX, pageY) => {
+        elementDimensions.value = {
+          x,
+          y,
+          width,
+          height,
+          pageX,
+          pageY,
+        };
+      });
     },
     [element, elementDimensions, onLayout]
   );
 
   const onBackdropLayout = useCallback(() => {
-    const measureWorklet = () => {
-      'worklet';
-      backdropDimensions.value = measure(backdrop);
-    };
-    runOnUI(measureWorklet)();
+    backdrop.current?.measure((x, y, width, height, pageX, pageY) => {
+      backdropDimensions.value = {
+        x,
+        y,
+        width,
+        height,
+        pageX,
+        pageY,
+      };
+    });
   }, [backdrop, backdropDimensions]);
 
   const onTooltipLayout = useCallback(() => {
-    const measureWorklet = () => {
-      'worklet';
-      tooltipDimensions.value = measure(tooltip);
-    };
-    runOnUI(measureWorklet)();
+    tooltip.current?.measure((x, y, width, height, pageX, pageY) => {
+      tooltipDimensions.value = {
+        x,
+        y,
+        width,
+        height,
+        pageX,
+        pageY,
+      };
+    });
   }, [tooltip, tooltipDimensions]);
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
