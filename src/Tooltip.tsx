@@ -1,20 +1,20 @@
-import React, { type PropsWithChildren, useCallback, useRef } from 'react';
+import { Portal } from '@gorhom/portal';
+import React, { useCallback, useRef, type PropsWithChildren } from 'react';
 import {
   StyleSheet,
   View,
   type ColorValue,
-  type StyleProp,
-  type ViewStyle,
-  type ViewProps,
   type LayoutChangeEvent,
+  type StyleProp,
+  type ViewProps,
+  type ViewStyle,
 } from 'react-native';
 import Animated, {
-  type BaseAnimationBuilder,
   useAnimatedStyle,
-  useSharedValue,
   useDerivedValue,
+  useSharedValue,
+  type BaseAnimationBuilder,
 } from 'react-native-reanimated';
-import { Portal } from '@gorhom/portal';
 import { Pointer } from './Pointer';
 
 export interface TooltipProps extends ViewProps {
@@ -174,7 +174,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
       tooltipDimensions.value &&
       pointPosition.value
     ) {
-      console.log({ tooltipDimensions: tooltipDimensions.value });
       let tooltipX = pointPosition.value.x - tooltipDimensions.value.width / 2;
       const tooltipOutsideRight =
         tooltipX + tooltipDimensions.value.width >
