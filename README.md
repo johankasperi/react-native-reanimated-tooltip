@@ -2,7 +2,7 @@
 
 Tooltip for React Native using [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated) and [@gorhom/portal](https://github.com/gorhom/react-native-portal)
 
-![Demo 1](./demo.gif)
+<img src="./demo.gif" alt="Demo 1" width=375 />
 
 ## Installation
 
