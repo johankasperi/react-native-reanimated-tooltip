@@ -1,6 +1,6 @@
 # react-native-reanimated-tooltip
 
-Tooltip for React Native using React Native Reanimated and Modal
+Tooltip for React Native using [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated) and [@gorhom/portal](https://github.com/gorhom/react-native-portal)
 
 ![Demo 1](./demo.gif)
 
