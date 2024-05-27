@@ -19,7 +19,6 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   type BaseAnimationBuilder,
-  runOnJS,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 
@@ -78,8 +77,15 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   } = props;
 
   const [delayedVisible, setDelayedVisible] = useState(visible);
-  if ((visible || !exiting) && visible !== delayedVisible) {
-    setDelayedVisible(visible);
+  if (visible !== delayedVisible) {
+    const duration = exiting?.getDuration();
+    if (duration && !visible) {
+      setTimeout(() => {
+        setDelayedVisible(visible);
+      }, duration);
+    } else {
+      setDelayedVisible(visible);
+    }
   }
 
   const element = useRef<View>(null);
@@ -251,15 +257,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
             />
             <Animated.View style={[containerStyle, containerAnimatedStyle]}>
               {visible ? (
-                <Animated.View
-                  entering={entering}
-                  exiting={exiting?.withCallback((finished) => {
-                    'worklet';
-                    if (finished) {
-                      runOnJS(setDelayedVisible)(false);
-                    }
-                  })}
-                >
+                <Animated.View entering={entering} exiting={exiting}>
                   <Animated.View
                     style={tooltipAnimatedStyle}
                     ref={tooltip}
