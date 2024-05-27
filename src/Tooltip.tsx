@@ -1,5 +1,10 @@
 import { Portal } from '@gorhom/portal';
-import React, { useCallback, useRef, type PropsWithChildren } from 'react';
+import React, {
+  useCallback,
+  useRef,
+  type PropsWithChildren,
+  useState,
+} from 'react';
 import {
   StyleSheet,
   View,
@@ -14,6 +19,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   type BaseAnimationBuilder,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 
@@ -70,6 +76,11 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     onLayout,
     ...rest
   } = props;
+
+  const [delayedVisible, setDelayedVisible] = useState(visible);
+  if ((visible || !exiting) && visible !== delayedVisible) {
+    setDelayedVisible(visible);
+  }
 
   const element = useRef<View>(null);
   const backdrop = useRef<View>(null);
@@ -230,7 +241,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     >
       {children}
       <Portal hostName={portalHostName}>
-        {visible ? (
+        {delayedVisible ? (
           <>
             <View
               style={styles.backdrop}
@@ -239,26 +250,36 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
               onLayout={onBackdropLayout}
             />
             <Animated.View style={[containerStyle, containerAnimatedStyle]}>
-              <Animated.View entering={entering} exiting={exiting}>
+              {visible ? (
                 <Animated.View
-                  style={tooltipAnimatedStyle}
-                  ref={tooltip}
-                  onLayout={onTooltipLayout}
+                  entering={entering}
+                  exiting={exiting?.withCallback((finished) => {
+                    'worklet';
+                    if (finished) {
+                      runOnJS(setDelayedVisible)(false);
+                    }
+                  })}
                 >
-                  <View style={tooltipStyle ?? styles.defaultTooltip}>
-                    {content}
-                  </View>
-                </Animated.View>
-                {withPointer ? (
-                  <Animated.View style={pointerAnimatedStyle}>
-                    <Pointer
-                      style={pointerStyle}
-                      size={pointerSize}
-                      color={pointerColor}
-                    />
+                  <Animated.View
+                    style={tooltipAnimatedStyle}
+                    ref={tooltip}
+                    onLayout={onTooltipLayout}
+                  >
+                    <View style={tooltipStyle ?? styles.defaultTooltip}>
+                      {content}
+                    </View>
                   </Animated.View>
-                ) : null}
-              </Animated.View>
+                  {withPointer ? (
+                    <Animated.View style={pointerAnimatedStyle}>
+                      <Pointer
+                        style={pointerStyle}
+                        size={pointerSize}
+                        color={pointerColor}
+                      />
+                    </Animated.View>
+                  ) : null}
+                </Animated.View>
+              ) : null}
             </Animated.View>
           </>
         ) : null}
