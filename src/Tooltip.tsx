@@ -4,6 +4,7 @@ import React, {
   useRef,
   type PropsWithChildren,
   useState,
+  useEffect,
 } from 'react';
 import {
   StyleSheet,
@@ -77,16 +78,24 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   } = props;
 
   const [delayedVisible, setDelayedVisible] = useState(visible);
-  if (visible !== delayedVisible) {
-    const duration = exiting?.getDuration();
-    if (duration && !visible) {
-      setTimeout(() => {
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    if (visible !== delayedVisible) {
+      const duration = exiting?.getDuration();
+      if (duration && !visible) {
+        timeout = setTimeout(() => {
+          setDelayedVisible(visible);
+        }, duration);
+      } else {
         setDelayedVisible(visible);
-      }, duration);
-    } else {
-      setDelayedVisible(visible);
+      }
     }
-  }
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [delayedVisible, exiting, visible]);
 
   const element = useRef<View>(null);
   const backdrop = useRef<View>(null);
