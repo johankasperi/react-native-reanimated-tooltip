@@ -145,7 +145,6 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const measureElement = useCallback(() => {
     'worklet';
     const measured = measure(element);
-    console.log(measured, element);
     if (measured) {
       const { pageX, pageY, width, height } = measured;
       elementDimensions.value = {
@@ -166,9 +165,11 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   const onElementLayout = useCallback(
     (event: LayoutChangeEvent) => {
       onLayout?.(event);
-      runOnUI(measureElement)();
+      if (visible) {
+        runOnUI(measureElement)();
+      }
     },
-    [onLayout, measureElement]
+    [onLayout, measureElement, visible]
   );
 
   const onBackdropLayout = useCallback(
