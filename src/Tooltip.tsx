@@ -16,10 +16,13 @@ import {
   type ViewStyle,
 } from 'react-native';
 import Animated, {
+  measure,
+  useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   type BaseAnimationBuilder,
+  runOnUI,
 } from 'react-native-reanimated';
 import { Pointer } from './Pointer';
 
@@ -97,7 +100,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     };
   }, [delayedVisible, exiting, visible]);
 
-  const element = useRef<View>(null);
+  const element = useAnimatedRef<Animated.View>();
   const backdrop = useRef<View>(null);
   const tooltip = useRef<Animated.View>(null);
 
@@ -139,19 +142,33 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
     return undefined;
   });
 
+  const measureElement = useCallback(() => {
+    'worklet';
+    const measured = measure(element);
+    console.log(measured, element);
+    if (measured) {
+      const { pageX, pageY, width, height } = measured;
+      elementDimensions.value = {
+        pageX,
+        pageY,
+        width,
+        height,
+      };
+    }
+  }, [element, elementDimensions]);
+
+  useEffect(() => {
+    if (visible) {
+      runOnUI(measureElement)();
+    }
+  }, [visible, measureElement]);
+
   const onElementLayout = useCallback(
     (event: LayoutChangeEvent) => {
       onLayout?.(event);
-      element.current?.measure((_x, _y, width, height, pageX, pageY) => {
-        elementDimensions.value = {
-          width,
-          height,
-          pageX,
-          pageY,
-        };
-      });
+      runOnUI(measureElement)();
     },
-    [element, elementDimensions, onLayout]
+    [onLayout, measureElement]
   );
 
   const onBackdropLayout = useCallback(
@@ -248,7 +265,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
   }, []);
 
   return (
-    <View
+    <Animated.View
       {...rest}
       ref={element}
       collapsable={false}
@@ -291,7 +308,7 @@ export const Tooltip = React.memo((props: PropsWithChildren<TooltipProps>) => {
           </>
         ) : null}
       </Portal>
-    </View>
+    </Animated.View>
   );
 });
 
