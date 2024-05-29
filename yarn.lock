@@ -14774,9 +14774,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-builder-bob@npm:^0.23.1":
-  version: 0.23.1
-  resolution: "react-native-builder-bob@npm:0.23.1"
+"react-native-builder-bob@npm:^0.23.2":
+  version: 0.23.2
+  resolution: "react-native-builder-bob@npm:0.23.2"
   dependencies:
     "@babel/core": ^7.18.5
     "@babel/plugin-proposal-class-properties": ^7.17.12
@@ -14799,7 +14799,7 @@ __metadata:
     yargs: ^17.5.1
   bin:
     bob: bin/bob
-  checksum: 58e7c991d80adcd394613debafd9f0d5ce56ee666aa7940c67ac422cdeac09098e0d96cac2985f79d62256fb6ebad7cfc0c3e240df77bae8716d9d293f1f5c7d
+  checksum: 1bee701c21f28f10c5737c8000e7fd6d8f641cf46fe7de03f5086d9951d2c5f3cb45375e292519b85f44a28f907e37f6c7bff324cfb1913b3bee0cb4db2efeb7
   languageName: node
   linkType: hard
 
@@ -14843,8 +14843,8 @@ __metadata:
     prettier: ^2.0.5
     react: 18.2.0
     react-native: 0.72.6
-    react-native-builder-bob: ^0.23.1
-    react-native-reanimated: ^3.11.0
+    react-native-builder-bob: ^0.23.2
+    react-native-reanimated: ^3.3.0
     release-it: ^15.0.0
     typescript: ^5.0.2
   peerDependencies:
@@ -14855,7 +14855,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:^3.11.0":
+"react-native-reanimated@npm:^3.3.0":
   version: 3.11.0
   resolution: "react-native-reanimated@npm:3.11.0"
   dependencies:
